@@ -1,4 +1,9 @@
 {
+  "scripts": {
+    "build": "hardhat compile",
+    "start": "hardhat node",
+    "test": "hardhat test"
+  },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@types/node": "^22.7.9",
