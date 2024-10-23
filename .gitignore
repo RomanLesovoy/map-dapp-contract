@@ -1,0 +1,42 @@
+# Node.js dependencies
+node_modules/
+
+# Hardhat build files
+artifacts/
+cache/
+typechain-types/
+
+# Environment files
+.env
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Code coverage files
+coverage/
+coverage.json
+
+# Hardhat temporary files
+deployments/
+
+# Contract build files
+build/
+
+# Local Hardhat configuration files
+hardhat.config.local.ts
+
+# Gas-reporter files
+gas-report.txt
+
+# Slither files (if used)
+slither.db
