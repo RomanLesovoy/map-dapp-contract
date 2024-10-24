@@ -6,11 +6,8 @@ async function main() {
   console.log("Deploying contracts with the account:", deployer.address);
 
   const BlockTrading = await ethers.getContractFactory("BlockTrading");
-  const blockTrading = await BlockTrading.deploy(deployer.address);
+  const blockTrading = await BlockTrading.deploy();
 
-  console.log("BlockTrading deploying to:", blockTrading.target);
-
-  // Wait for the deployment to be confirmed
   await blockTrading.waitForDeployment();
 
   console.log("BlockTrading deployed to:", await blockTrading.getAddress());
