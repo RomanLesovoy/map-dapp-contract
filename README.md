@@ -1,10 +1,10 @@
 # BlockTrading
 
-BlockTrading - this is a smart contract on Ethereum, implementing the trading of virtual blocks on a 1000x1000 grid.
+BlockTrading - this is a smart contract on Ethereum, implementing the trading of virtual blocks on a 100x100 grid.
 
 ## Description
 
-BlockTrading - this is an ERC721 token representing virtual blocks on a 1000x1000 grid. Each block can be created (mint), painted in black or white, put up for sale and bought by other users.
+BlockTrading - this is an ERC721 token representing virtual blocks on a 100x100 grid. Each block can be created (mint), painted in black or white, put up for sale and bought by other users.
 
 ## Main functions
 
