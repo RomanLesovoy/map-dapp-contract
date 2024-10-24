@@ -26,8 +26,9 @@ BlockTrading - this is an ERC721 token representing virtual blocks on a 1000x100
 
 2. Create a file `.env` and add the following variables:
    ```
+   LOCAL_URL=http://127.0.0.1:8545
    INFURA_PROJECT_ID=your_infura_project_id
-   PRIVATE_KEY=your_private_key
+   INFURA_PRIVATE_KEY=your_infura_private_key
    ```
 
 3. Compile the contract:
@@ -44,6 +45,9 @@ result:
    ```
    npx hardhat run scripts/deploy.ts --network sepolia
    ```
+
+## Backend
+Link to the backend repository: https://github.com/RomanLesovoy/map-dapp
 
 ## Testing
 
