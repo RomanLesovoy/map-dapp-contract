@@ -26,6 +26,7 @@ contract BlockTrading is Ownable {
         colorMap = new uint256[]((TOTAL_BLOCKS + 63) / 64);
     }
 
+    // Buying a block from the contract
     function buyBlock(uint256 blockId) public payable {
         require(blockId < TOTAL_BLOCKS, "Invalid block ID");
         require(!isOwnedByUser(blockId), "Block already owned");
@@ -36,12 +37,14 @@ contract BlockTrading is Ownable {
         setColor(blockId, 1); // Default color (e.g., white)
     }
 
+    // Putting a block up for sale
     function sellBlock(uint256 blockId, uint256 price) public {
         require(isOwnedByUser(blockId), "Not the owner of the block");
         require(blockOwners[blockId] == msg.sender, "Not the owner of the block");
         blockPrices[blockId] = price;
     }
 
+    // Buying a block from another user
     function buyFromUser(uint256 blockId) public payable {
         require(isOwnedByUser(blockId), "Block not for sale");
         require(blockPrices[blockId] > 0, "Block not for sale");
@@ -53,6 +56,7 @@ contract BlockTrading is Ownable {
         payable(seller).transfer(msg.value);
     }
 
+    // Setting the color of a block
     function setColor(uint256 blockId, uint8 color) public {
         require(isOwnedByUser(blockId), "Not the owner of the block");
         require(blockOwners[blockId] == msg.sender, "Not the owner of the block");
@@ -61,18 +65,21 @@ contract BlockTrading is Ownable {
         colorMap[index] = (colorMap[index] & ~(uint256(15) << bitIndex)) | (uint256(color) << bitIndex);
     }
 
+    // Getting the color of a block
     function getColor(uint256 blockId) public view returns (uint8) {
         uint256 index = blockId / 64;
         uint256 bitIndex = (blockId % 64) * 4;
         return uint8((colorMap[index] >> bitIndex) & 15);
     }
 
+    // Checking if a block is owned by a user
     function isOwnedByUser(uint256 blockId) public view returns (bool) {
         uint256 index = blockId / 256;
         uint256 bitIndex = blockId % 256;
         return (ownershipMap[index] & (1 << bitIndex)) != 0;
     }
 
+    // Setting the ownership of a block
     function setOwnership(uint256 blockId, bool owned) private {
         uint256 index = blockId / 256;
         uint256 bitIndex = blockId % 256;
@@ -83,6 +90,7 @@ contract BlockTrading is Ownable {
         }
     }
 
+    // Getting information about a block
     function getBlockInfo(uint256 blockId) public view returns (bool owned, address owner, uint8 color, uint256 price) {
         owned = isOwnedByUser(blockId);
         owner = blockOwners[blockId];
@@ -90,6 +98,7 @@ contract BlockTrading is Ownable {
         price = blockPrices[blockId];
     }
 
+    // Buying multiple blocks in one transaction
     function buyMultipleBlocks(uint256[] memory blockIds) public payable {
         uint256 totalCost = 0;
         for (uint256 i = 0; i < blockIds.length; i++) {
@@ -106,15 +115,18 @@ contract BlockTrading is Ownable {
         }
     }
 
+    // Setting the price of creating a new block
     function setMintPrice(uint256 newPrice) public onlyOwner {
         mintPrice = newPrice;
     }
 
+    // Withdrawing funds from the contract
     function withdraw() public onlyOwner {
         uint256 balance = address(this).balance;
         payable(owner()).transfer(balance);
     }
 
+    // Getting information about a block
     struct BlockInfo {
         bool owned;
         address owner;
@@ -122,7 +134,7 @@ contract BlockTrading is Ownable {
         uint256 price;
     }
 
-    // use pagination to avoid memory limit
+    // Using pagination to avoid memory limit
     function getAllBlocksInfo(uint256 startId, uint256 endId) public view returns (BlockInfo[] memory) {
         require(startId < TOTAL_BLOCKS && endId < TOTAL_BLOCKS && startId <= endId, "Invalid range");
         

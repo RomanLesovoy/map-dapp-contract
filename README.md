@@ -8,16 +8,16 @@ BlockTrading - this is an ERC721 token representing virtual blocks on a 1000x100
 
 ## Main functions
 
-- `mint(uint256 blockId)`: Creating a new block
-- `setBlockColor(uint256 blockId, string memory color)`: Setting the color of the block (black or white)
-- `getBlockColor(uint256 blockId)`: Getting the current color of the block
-- `setBlockPrice(uint256 blockId, uint256 price)`: Setting the price of the block for sale
-- `getBlockPrice(uint256 blockId)`: Getting the current price of the block
-- `buyBlock(uint256 blockId)`: Buying a block
-- `setMintPrice(uint256 newPrice)`: Setting the price of creating a new block (only the contract owner)
-- `withdraw()`: Withdrawing funds from the contract (only the contract owner)
+- `buyBlock(uint256 blockId)`: Buying a block from the contract
+- `buyMultipleBlocks(uint256[] memory blockIds)`: Buying multiple blocks in one transaction
+- `setColor(uint256 blockId, uint8 color)`: Setting the color for a block
+- `sellBlock(uint256 blockId, uint256 price)`: Putting a block up for sale
+- `buyFromUser(uint256 blockId)`: Buying a block from another user
+- `getAllBlocksInfo(uint256 startId, uint256 endId)`: Getting information about a range of blocks
+- `setMintPrice(uint256 newPrice)`: Setting the price of creating a new block (only for the contract owner)
+- `withdraw()`: Withdrawing funds from the contract (only for the contract owner)
 
-## Установка и развертывание
+## Installation and deployment
 
 1. Install dependencies:
    ```
