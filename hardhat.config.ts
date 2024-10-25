@@ -13,10 +13,10 @@ const config: HardhatUserConfig = {
     localhost: {
       url: process.env.LOCAL_URL
     },
-    sepolia: {
-      url: `https://sepolia.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
-      accounts: process.env.INFURA_PRIVATE_KEY !== undefined ? [process.env.INFURA_PRIVATE_KEY] : [],
-    },
+    // sepolia: {
+    //   url: `https://sepolia.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
+    //   accounts: process.env.INFURA_PRIVATE_KEY !== undefined ? [process.env.INFURA_PRIVATE_KEY] : [],
+    // },
     // Add other networks here
   }
 };

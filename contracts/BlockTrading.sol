@@ -91,11 +91,44 @@ contract BlockTrading is Ownable {
     }
 
     // Getting information about a block
-    function getBlockInfo(uint256 blockId) public view returns (bool owned, address owner, uint8 color, uint256 price) {
-        owned = isOwnedByUser(blockId);
-        owner = blockOwners[blockId];
-        color = getColor(blockId);
-        price = blockPrices[blockId];
+    struct BlockInfo {
+        uint256 id;  // Добавлено поле id
+        bool owned;
+        address owner;
+        uint8 color;
+        uint256 price;
+    }
+
+    // Using pagination to avoid memory limit
+    function getAllBlocksInfo(uint256 startId, uint256 endId) public view returns (BlockInfo[] memory) {
+        require(startId < TOTAL_BLOCKS && endId < TOTAL_BLOCKS && startId <= endId, "Invalid range");
+        
+        uint256 length = endId - startId + 1;
+        BlockInfo[] memory blocksInfo = new BlockInfo[](length);
+        
+        for (uint256 i = 0; i < length; i++) {
+            uint256 blockId = startId + i;
+            bool owned = isOwnedByUser(blockId);
+            address owner = blockOwners[blockId];
+            uint8 color = getColor(blockId);
+            uint256 price = blockPrices[blockId];
+            
+            blocksInfo[i] = BlockInfo(blockId, owned, owner, color, price);  // Добавлен blockId
+        }
+        
+        return blocksInfo;
+    }
+
+    // Getting information about a single block
+    function getBlockInfo(uint256 blockId) public view returns (BlockInfo memory) {
+        require(blockId < TOTAL_BLOCKS, "Invalid block ID");
+        
+        bool owned = isOwnedByUser(blockId);
+        address owner = blockOwners[blockId];
+        uint8 color = getColor(blockId);
+        uint256 price = blockPrices[blockId];
+        
+        return BlockInfo(blockId, owned, owner, color, price);
     }
 
     // Buying multiple blocks in one transaction
@@ -124,33 +157,5 @@ contract BlockTrading is Ownable {
     function withdraw() public onlyOwner {
         uint256 balance = address(this).balance;
         payable(owner()).transfer(balance);
-    }
-
-    // Getting information about a block
-    struct BlockInfo {
-        bool owned;
-        address owner;
-        uint8 color;
-        uint256 price;
-    }
-
-    // Using pagination to avoid memory limit
-    function getAllBlocksInfo(uint256 startId, uint256 endId) public view returns (BlockInfo[] memory) {
-        require(startId < TOTAL_BLOCKS && endId < TOTAL_BLOCKS && startId <= endId, "Invalid range");
-        
-        uint256 length = endId - startId + 1;
-        BlockInfo[] memory blocksInfo = new BlockInfo[](length);
-        
-        for (uint256 i = 0; i < length; i++) {
-            uint256 blockId = startId + i;
-            bool owned = isOwnedByUser(blockId);
-            address owner = blockOwners[blockId];
-            uint8 color = getColor(blockId);
-            uint256 price = blockPrices[blockId];
-            
-            blocksInfo[i] = BlockInfo(owned, owner, color, price);
-        }
-        
-        return blocksInfo;
     }
 }

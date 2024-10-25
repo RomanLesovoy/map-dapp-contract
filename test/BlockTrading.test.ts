@@ -20,9 +20,10 @@ describe("BlockTrading", function () {
   describe("Buying blocks", function () {
     it("Should allow buying a block", async function () {
       await blockTrading.connect(addr1).buyBlock(0, { value: ethers.parseEther("0.1") });
-      const [owned, blockOwner, , ] = await blockTrading.getBlockInfo(0);
-      expect(owned).to.be.true;
-      expect(blockOwner).to.equal(addr1.address);
+      const blockInfo = await blockTrading.getBlockInfo(0);
+      expect(blockInfo.id).to.equal(0);
+      expect(blockInfo.owned).to.be.true;
+      expect(blockInfo.owner).to.equal(addr1.address);
     });
 
     it("Should not allow buying a block with insufficient payment", async function () {
@@ -33,9 +34,10 @@ describe("BlockTrading", function () {
     it("Should allow buying multiple blocks", async function () {
       await blockTrading.connect(addr1).buyMultipleBlocks([0, 1, 2], { value: ethers.parseEther("0.3") });
       for (let i = 0; i < 3; i++) {
-        const [owned, blockOwner, , ] = await blockTrading.getBlockInfo(i);
-        expect(owned).to.be.true;
-        expect(blockOwner).to.equal(addr1.address);
+        const blockInfo = await blockTrading.getBlockInfo(i);
+        expect(blockInfo.id).to.equal(i);
+        expect(blockInfo.owned).to.be.true;
+        expect(blockInfo.owner).to.equal(addr1.address);
       }
     });
   });
@@ -47,8 +49,8 @@ describe("BlockTrading", function () {
 
     it("Should allow the owner to set the color of a block", async function () {
       await blockTrading.connect(addr1).setColor(0, 5);
-      const [, , color, ] = await blockTrading.getBlockInfo(0);
-      expect(color).to.equal(5);
+      const blockInfo = await blockTrading.getBlockInfo(0);
+      expect(blockInfo.color).to.equal(5);
     });
 
     it("Should not allow non-owner to set the color of a block", async function () {
@@ -64,16 +66,16 @@ describe("BlockTrading", function () {
 
     it("Should allow the owner to sell a block", async function () {
       await blockTrading.connect(addr1).sellBlock(0, ethers.parseEther("0.2"));
-      const [, , , price] = await blockTrading.getBlockInfo(0);
-      expect(price).to.equal(ethers.parseEther("0.2"));
+      const blockInfo = await blockTrading.getBlockInfo(0);
+      expect(blockInfo.price).to.equal(ethers.parseEther("0.2"));
     });
 
     it("Should allow buying a block from another user", async function () {
       await blockTrading.connect(addr1).sellBlock(0, ethers.parseEther("0.2"));
       await blockTrading.connect(addr2).buyFromUser(0, { value: ethers.parseEther("0.2") });
-      const [owned, blockOwner, , ] = await blockTrading.getBlockInfo(0);
-      expect(owned).to.be.true;
-      expect(blockOwner).to.equal(addr2.address);
+      const blockInfo = await blockTrading.getBlockInfo(0);
+      expect(blockInfo.owned).to.be.true;
+      expect(blockInfo.owner).to.equal(addr2.address);
     });
 
     it("Should not allow buying a block with insufficient payment", async function () {
@@ -97,18 +99,21 @@ describe("BlockTrading", function () {
       expect(blocksInfo.length).to.equal(3);
       
       // Проверка первого блока
+      expect(blocksInfo[0].id).to.equal(0);
       expect(blocksInfo[0].owned).to.be.true;
       expect(blocksInfo[0].owner).to.equal(addr1.address);
       expect(blocksInfo[0].color).to.equal(5);
       expect(blocksInfo[0].price).to.equal(ethers.parseEther("0.2"));
       
       // Проверка второго блока
+      expect(blocksInfo[1].id).to.equal(1);
       expect(blocksInfo[1].owned).to.be.true;
       expect(blocksInfo[1].owner).to.equal(addr2.address);
       expect(blocksInfo[1].color).to.equal(1); // Значение по умолчанию
       expect(blocksInfo[1].price).to.equal(0);
       
       // Проверка третьего блока (не купленного)
+      expect(blocksInfo[2].id).to.equal(2);
       expect(blocksInfo[2].owned).to.be.false;
       expect(blocksInfo[2].owner).to.equal(ethers.ZeroAddress);
       expect(blocksInfo[2].color).to.equal(0);
