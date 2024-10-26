@@ -2,158 +2,103 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
-contract BlockTrading is Ownable {
+contract BlockTrading is Ownable, ERC721 {
     uint256 constant public GRID_SIZE = 100;
     uint256 constant public TOTAL_BLOCKS = GRID_SIZE * GRID_SIZE;
+    uint256 constant public INITIAL_PRICE = 0.0001 ether;
     
-    // Bit map of block ownership (1 bit per block)
-    uint256[] private ownershipMap;
+    struct Block {
+        uint8 color;
+        uint256 price;
+        bool exists;
+    }
     
-    // Block colors (4 bits per block)
-    uint256[] private colorMap;
-    
-    // Block prices (for sale)
-    mapping(uint256 => uint256) private blockPrices;
-    
-    // Block owners (only for sold blocks)
-    mapping(uint256 => address) private blockOwners;
+    mapping(uint256 => Block) private blocks;
 
-    uint256 public mintPrice = 0.1 ether;
+    event BlockBought(uint256 indexed blockId, address indexed buyer, uint256 price);
+    event ColorChanged(uint256 indexed blockId, uint8 newColor);
+    event BlockPriceSet(uint256 indexed blockId, uint256 newPrice);
 
-    constructor() Ownable(msg.sender) {
-        ownershipMap = new uint256[]((TOTAL_BLOCKS + 255) / 256);
-        colorMap = new uint256[]((TOTAL_BLOCKS + 63) / 64);
+    constructor() ERC721("BlockTrading", "BLK") Ownable(msg.sender) {
+        // Блоки не минтятся при создании контракта
     }
 
-    // Buying a block from the contract
     function buyBlock(uint256 blockId) public payable {
         require(blockId < TOTAL_BLOCKS, "Invalid block ID");
-        require(!isOwnedByUser(blockId), "Block already owned");
-        require(msg.value >= mintPrice, "Insufficient payment");
-
-        setOwnership(blockId, true);
-        blockOwners[blockId] = msg.sender;
-        setColor(blockId, 1); // Default color (e.g., white)
-    }
-
-    // Putting a block up for sale
-    function sellBlock(uint256 blockId, uint256 price) public {
-        require(isOwnedByUser(blockId), "Not the owner of the block");
-        require(blockOwners[blockId] == msg.sender, "Not the owner of the block");
-        blockPrices[blockId] = price;
-    }
-
-    // Buying a block from another user
-    function buyFromUser(uint256 blockId) public payable {
-        require(isOwnedByUser(blockId), "Block not for sale");
-        require(blockPrices[blockId] > 0, "Block not for sale");
-        require(msg.value >= blockPrices[blockId], "Insufficient payment");
-
-        address seller = blockOwners[blockId];
-        blockOwners[blockId] = msg.sender;
-        blockPrices[blockId] = 0;
-        payable(seller).transfer(msg.value);
-    }
-
-    // Setting the color of a block
-    function setColor(uint256 blockId, uint8 color) public {
-        require(isOwnedByUser(blockId), "Not the owner of the block");
-        require(blockOwners[blockId] == msg.sender, "Not the owner of the block");
-        uint256 index = blockId / 64;
-        uint256 bitIndex = (blockId % 64) * 4;
-        colorMap[index] = (colorMap[index] & ~(uint256(15) << bitIndex)) | (uint256(color) << bitIndex);
-    }
-
-    // Getting the color of a block
-    function getColor(uint256 blockId) public view returns (uint8) {
-        uint256 index = blockId / 64;
-        uint256 bitIndex = (blockId % 64) * 4;
-        return uint8((colorMap[index] >> bitIndex) & 15);
-    }
-
-    // Checking if a block is owned by a user
-    function isOwnedByUser(uint256 blockId) public view returns (bool) {
-        uint256 index = blockId / 256;
-        uint256 bitIndex = blockId % 256;
-        return (ownershipMap[index] & (1 << bitIndex)) != 0;
-    }
-
-    // Setting the ownership of a block
-    function setOwnership(uint256 blockId, bool owned) private {
-        uint256 index = blockId / 256;
-        uint256 bitIndex = blockId % 256;
-        if (owned) {
-            ownershipMap[index] |= (1 << bitIndex);
+        
+        uint256 price;
+        if (!blocks[blockId].exists) {
+            // Если блок еще не создан, создаем его
+            require(msg.value >= INITIAL_PRICE, "Insufficient payment for new block");
+            _safeMint(msg.sender, blockId);
+            blocks[blockId] = Block(0, 0, true);  // Устанавливаем цену в 0 после покупки
+            price = INITIAL_PRICE;
         } else {
-            ownershipMap[index] &= ~(1 << bitIndex);
+            price = blocks[blockId].price;
+            require(price > 0, "Block not for sale");
+            require(msg.value >= price, "Insufficient payment");
+            address currentOwner = ownerOf(blockId);
+            require(currentOwner != msg.sender, "You already own this block");
+            _safeTransfer(currentOwner, msg.sender, blockId, "");
+            
+            if (currentOwner != address(this)) {
+                payable(currentOwner).transfer(price);
+            }
+            blocks[blockId].price = 0; // Reset price after purchase
+        }
+
+        blocks[blockId].exists = true;
+        emit BlockBought(blockId, msg.sender, price);
+
+        // Возвращаем излишек оплаты, если есть
+        if (msg.value > price) {
+            payable(msg.sender).transfer(msg.value - price);
         }
     }
 
-    // Getting information about a block
-    struct BlockInfo {
-        uint256 id;  // Добавлено поле id
-        bool owned;
-        address owner;
-        uint8 color;
-        uint256 price;
+    function setColor(uint256 blockId, uint8 color) public {
+        require(blocks[blockId].exists, "Block does not exist");
+        require(ownerOf(blockId) == msg.sender, "Not the owner of the block");
+        blocks[blockId].color = color;
+        emit ColorChanged(blockId, color);
     }
 
-    // Using pagination to avoid memory limit
-    function getAllBlocksInfo(uint256 startId, uint256 endId) public view returns (BlockInfo[] memory) {
+    function setBlockPrice(uint256 blockId, uint256 newPrice) public {
+        require(blocks[blockId].exists, "Block does not exist");
+        require(ownerOf(blockId) == msg.sender, "Not the owner of the block");
+        blocks[blockId].price = newPrice;
+        emit BlockPriceSet(blockId, newPrice);
+    }
+
+    function getBlockInfo(uint256 blockId) public view returns (address owner, uint8 color, uint256 price) {
+        require(blockId < TOTAL_BLOCKS, "Invalid block ID");
+        if (blocks[blockId].exists) {
+            owner = ownerOf(blockId);
+            color = blocks[blockId].color;
+            price = blocks[blockId].price;
+        } else {
+            owner = address(this);
+            color = 0;
+            price = INITIAL_PRICE;
+        }
+    }
+
+    function getAllBlocksInfo(uint256 startId, uint256 endId) public view returns (address[] memory owners, uint8[] memory colors, uint256[] memory prices) {
         require(startId < TOTAL_BLOCKS && endId < TOTAL_BLOCKS && startId <= endId, "Invalid range");
         
         uint256 length = endId - startId + 1;
-        BlockInfo[] memory blocksInfo = new BlockInfo[](length);
+        owners = new address[](length);
+        colors = new uint8[](length);
+        prices = new uint256[](length);
         
         for (uint256 i = 0; i < length; i++) {
             uint256 blockId = startId + i;
-            bool owned = isOwnedByUser(blockId);
-            address owner = blockOwners[blockId];
-            uint8 color = getColor(blockId);
-            uint256 price = blockPrices[blockId];
-            
-            blocksInfo[i] = BlockInfo(blockId, owned, owner, color, price);  // Добавлен blockId
-        }
-        
-        return blocksInfo;
-    }
-
-    // Getting information about a single block
-    function getBlockInfo(uint256 blockId) public view returns (BlockInfo memory) {
-        require(blockId < TOTAL_BLOCKS, "Invalid block ID");
-        
-        bool owned = isOwnedByUser(blockId);
-        address owner = blockOwners[blockId];
-        uint8 color = getColor(blockId);
-        uint256 price = blockPrices[blockId];
-        
-        return BlockInfo(blockId, owned, owner, color, price);
-    }
-
-    // Buying multiple blocks in one transaction
-    function buyMultipleBlocks(uint256[] memory blockIds) public payable {
-        uint256 totalCost = 0;
-        for (uint256 i = 0; i < blockIds.length; i++) {
-            require(blockIds[i] < TOTAL_BLOCKS, "Invalid block ID");
-            require(!isOwnedByUser(blockIds[i]), "Block already owned");
-            totalCost += mintPrice;
-        }
-        require(msg.value >= totalCost, "Insufficient payment");
-
-        for (uint256 i = 0; i < blockIds.length; i++) {
-            setOwnership(blockIds[i], true);
-            blockOwners[blockIds[i]] = msg.sender;
-            setColor(blockIds[i], 1); // Default color
+            (owners[i], colors[i], prices[i]) = getBlockInfo(blockId);
         }
     }
 
-    // Setting the price of creating a new block
-    function setMintPrice(uint256 newPrice) public onlyOwner {
-        mintPrice = newPrice;
-    }
-
-    // Withdrawing funds from the contract
     function withdraw() public onlyOwner {
         uint256 balance = address(this).balance;
         payable(owner()).transfer(balance);

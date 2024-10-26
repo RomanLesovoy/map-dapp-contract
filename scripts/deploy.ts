@@ -10,7 +10,9 @@ async function main() {
 
   await blockTrading.waitForDeployment();
 
-  console.log("BlockTrading deployed to:", await blockTrading.getAddress());
+  const contractAddress = await blockTrading.getAddress();
+  console.log("BlockTrading deployed to:", contractAddress);
+  console.log("Contract owner:", await blockTrading.owner());
 }
 
 main().catch((error) => {
