@@ -9,13 +9,8 @@ BlockTrading - this is an ERC721 token representing virtual blocks on a 100x100 
 ## Main functions
 
 - `buyBlock(uint256 blockId)`: Buying a block from the contract
-- `buyMultipleBlocks(uint256[] memory blockIds)`: Buying multiple blocks in one transaction
 - `setColor(uint256 blockId, uint8 color)`: Setting the color for a block
-- `sellBlock(uint256 blockId, uint256 price)`: Putting a block up for sale
-- `buyFromUser(uint256 blockId)`: Buying a block from another user
 - `getAllBlocksInfo(uint256 startId, uint256 endId)`: Getting information about a range of blocks
-- `setMintPrice(uint256 newPrice)`: Setting the price of creating a new block (only for the contract owner)
-- `withdraw()`: Withdrawing funds from the contract (only for the contract owner)
 
 ## Installation and deployment
 
@@ -52,6 +47,9 @@ Link to the backend repository: https://github.com/RomanLesovoy/map-dapp
 ## Testing
 
 To run tests, use the command:
+```
+npx hardhat run:debug
+```
 
 ## License
 
