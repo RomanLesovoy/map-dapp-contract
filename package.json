@@ -3,7 +3,7 @@
     "build": "hardhat compile",
     "start": "hardhat node",
     "deploy:sepolia": "npx hardhat run scripts/deploy.ts --network sepolia",
-    "run:debug": "npx hardhat run scripts/debug-but-from-user.js --network hardhat",
+    "run:debug": "npx hardhat run scripts/debug-test-user.js --network hardhat",
     "test": "hardhat test"
   },
   "devDependencies": {
